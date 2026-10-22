@@ -561,6 +561,12 @@
         .vaga[data-nivel="critical"] { border-top-color: var(--critical); }
         .vaga[data-nivel="neutral"] { border-top-color: var(--axis); }
 
+        /* Carregador offline: valores parados */
+        .vaga[data-offline="1"] .sessao,
+        .vaga[data-offline="1"] .sensores {
+            opacity: 0.6;
+        }
+
         .vaga-title {
             display: flex;
             align-items: center;
@@ -617,6 +623,8 @@
             display: none;
         }
 
+        .causa[data-nivel="neutral"] { background: var(--surface-2); }
+        .causa[data-nivel="neutral"] svg.icon { color: var(--ink-2); }
         .causa[data-nivel="critical"] { background: var(--critical-bg); }
         .causa[data-nivel="critical"] svg.icon { color: var(--critical-ink); }
         .causa[data-nivel="warning"] { background: var(--warning-bg); }
@@ -1577,6 +1585,12 @@
     // ==========================================================
 
     function situacaoVaga(c) {
+        if (c.status === "emergencia") {
+            return { nivel: "critical", texto: "Emergência", icone: "stop" };
+        }
+        if (c.status === "offline") {
+            return { nivel: "neutral", texto: "Offline", icone: "wifiOff" };
+        }
         if (c.status === "erro") {
             return { nivel: "critical", texto: "Bloqueado", icone: "stop" };
         }
@@ -1591,13 +1605,31 @@
                 : { nivel: "good", texto: "Operacional", icone: "check" };
         }
         if (c.status === "livre") {
-            return { nivel: "neutral", texto: "Disponível", icone: "plug" };
+            return { nivel: "good", texto: "Disponível", icone: "plug" };
         }
         return { nivel: "neutral", texto: "Aguardando", icone: "clock" };
     }
 
     function causaVaga(c) {
         const p = estado.parametros;
+        if (c.status === "emergencia") {
+            return {
+                nivel: "critical",
+                texto: "Botão de emergência acionado. A recarga foi interrompida e o carregador está em alerta de emergência."
+            };
+        }
+        if (c.status === "offline") {
+            return {
+                nivel: "neutral",
+                texto: "Carregador offline: nenhum usuário autenticado (login desligado). A recarga só fica disponível depois do login."
+            };
+        }
+        if (c.status === "livre") {
+            return {
+                nivel: "neutral",
+                texto: "Recarga disponível. Aguardando a conexão de um veículo para iniciar."
+            };
+        }
         if (c.status === "erro") {
             const motivos = [];
             if (c.sobrecargaEletrica === 1) motivos.push(`sobrecarga elétrica (LDR ${c.ldr})`);
@@ -1628,7 +1660,7 @@
         const qtd = Number(d.quantidadeCarregadores ?? 0);
 
         setTexto("kpi-sessoes", String(d.sessoesAtivas ?? 0));
-        setTexto("kpi-sessoes-sub", qtd === 1 ? "de 1 vaga conectada" : `de ${qtd} vagas conectadas`);
+        setTexto("kpi-sessoes-sub", qtd === 1 ? "de 1 vaga" : `de ${qtd} vagas`);
 
         const capacidade = p.potenciaNominalKW * qtd;
         const uso = capacidade > 0 ? (d.potenciaTotal / capacidade) * 100 : 0;
@@ -1724,7 +1756,7 @@
         // Sensores
         const sensores = el("div", { class: "sensores" });
         r.sensores = {};
-        for (const chave of ["fonte", "temperatura", "consumo", "usuario"]) {
+        for (const chave of ["fonte", "temperatura", "consumo", "usuario", "veiculo", "emergencia"]) {
             const box = el("div", { class: "sensor" });
             const label = el("div", { class: "sensor-label" });
             const valor = el("div", { class: "sensor-valor" });
@@ -1759,6 +1791,7 @@
         const sit = situacaoVaga(c);
 
         r.root.dataset.nivel = sit.nivel;
+        r.root.dataset.offline = c.status === "offline" ? "1" : "0";
         r.key.style.background = corSerie(c.numeroVaga);
         r.nome.textContent = nomeVaga(c);
         r.sub.textContent = `${modeloVaga(c)} · ID ${c.device}`;
@@ -1771,7 +1804,7 @@
             r.causa.hidden = false;
             r.causa.dataset.nivel = causa.nivel;
             r.causa.replaceChildren(
-                icone(causa.nivel === "critical" ? "stop" : "alert"),
+                icone(causa.nivel === "critical" ? "stop" : (causa.nivel === "neutral" ? "info" : "alert")),
                 el("span", { text: causa.texto })
             );
         } else {
@@ -1822,9 +1855,21 @@
 
         setSensor(r.sensores.usuario,
             "user",
-            "Usuário",
-            c.login === 1 ? "Autenticado" : "Não autenticado",
+            "Usuário (login)",
+            c.login === 1 ? "Logado" : "Deslogado · offline",
             null);
+
+        setSensor(r.sensores.veiculo,
+            "plug",
+            "Veículo",
+            c.carro === 1 ? "Conectado" : "Não conectado",
+            null);
+
+        setSensor(r.sensores.emergencia,
+            "alert",
+            "Botão de emergência",
+            c.emergencia === 1 ? "ACIONADO" : "Normal",
+            c.emergencia === 1 ? "critical" : null);
 
         r.ultima.textContent = `Última leitura do Tinkercad às ${c.ultimaAtualizacao ?? "--"}`;
     }
@@ -1873,9 +1918,11 @@
         }
 
         const carregando = lista.filter(c => c.carregando === 1).length;
-        const comAlerta = lista.filter(c => c.status === "erro" || c.status === "alerta").length;
+        const comAlerta = lista.filter(c => c.status === "erro" || c.status === "alerta" || c.status === "emergencia").length;
+        const offline = lista.filter(c => c.status === "offline").length;
         let resumo = `${lista.length} ${lista.length === 1 ? "vaga" : "vagas"} · ${carregando} carregando`;
         if (comAlerta) resumo += ` · ${comAlerta} com alerta`;
+        if (offline) resumo += ` · ${offline} offline`;
         setTexto("vagas-resumo", resumo);
     }
 
@@ -1908,7 +1955,9 @@
         }
 
         const lista = vagasOrdenadas(d);
-        const criticos = lista.filter(c => c.status === "erro");
+        const emergencias = lista.filter(c => c.status === "emergencia");
+        const bloqueados = lista.filter(c => c.status === "erro");
+        const criticos = [...emergencias, ...bloqueados];
         const avisos = lista.filter(c => c.status === "alerta");
 
         if (!criticos.length && !avisos.length) {
@@ -1917,7 +1966,9 @@
         }
 
         const nivel = criticos.length ? "critical" : "warning";
-        const titulo = criticos.length
+        const titulo = emergencias.length
+            ? (emergencias.length === 1 ? "EMERGÊNCIA: botão acionado em 1 carregador" : `EMERGÊNCIA: botão acionado em ${emergencias.length} carregadores`)
+            : criticos.length
             ? (criticos.length === 1 ? "1 carregador bloqueado por segurança" : `${criticos.length} carregadores bloqueados por segurança`)
             : (avisos.length === 1 ? "1 carregador com potência reduzida" : `${avisos.length} carregadores com potência reduzida`);
 
@@ -2259,15 +2310,29 @@
                 registrarEvento("info", nome, `Carregador identificado (${situacaoVaga(c).texto.toLowerCase()}).`);
             } else {
                 if (ant.login !== c.login) {
-                    if (c.login === 1) {
-                        registrarEvento("info", nome, "Sessão de recarga iniciada.");
-                    } else {
+                    registrarEvento("info", nome, c.login === 1
+                        ? "Login realizado: carregador online."
+                        : "Login desligado: carregador offline.");
+                }
+
+                if (ant.carro !== c.carro) {
+                    if (c.carro === 1) {
+                        registrarEvento("info", nome, "Veículo conectado.");
+                    } else if (ant.sessoesAtivas === 1) {
                         registrarEvento("info", nome,
-                            `Sessão encerrada: ${numeroBR(ant.energiaSessao)} kWh · ${moedaBR(ant.receitaSessao)}.`);
+                            `Veículo desconectado. Sessão encerrada: ${numeroBR(ant.energiaSessao)} kWh · ${moedaBR(ant.receitaSessao)}.`);
+                    } else {
+                        registrarEvento("info", nome, "Veículo desconectado.");
                     }
                 }
 
-                if (ant.status !== c.status) {
+                if (ant.emergencia !== c.emergencia) {
+                    registrarEvento(c.emergencia === 1 ? "critical" : "good", nome, c.emergencia === 1
+                        ? "Botão de emergência ACIONADO: recarga interrompida."
+                        : "Botão de emergência liberado.");
+                }
+
+                if (ant.status !== c.status && c.emergencia === 0 && ant.emergencia === 0) {
                     if (c.status === "erro") {
                         registrarEvento("critical", nome, causaVaga(c).texto);
                     } else if (c.status === "alerta") {
@@ -2286,6 +2351,9 @@
 
             estado.anteriores.set(id, {
                 login: c.login,
+                carro: c.carro,
+                emergencia: c.emergencia,
+                sessoesAtivas: c.sessoesAtivas,
                 status: c.status,
                 solar: c.solar,
                 energiaSessao: c.energiaSessao,
