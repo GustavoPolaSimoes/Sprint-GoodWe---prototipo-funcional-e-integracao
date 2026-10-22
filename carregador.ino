@@ -2,8 +2,12 @@ int ldr = A0;
 int sensor_temp = A1;
 int login = 2;
 int energia_solar = 3;
+int carro_conectado = 5;
+int emergencia = 4;
 int switchlogin = 0;
 int switchsolar = 0;
+int switchcarro = 0;
+int switchemergencia = 0;
 int alta_demanda = 13;
 int sobrecargaE = 12;
 int sobrecargaT = 10;
@@ -16,6 +20,8 @@ void setup() {
 
   pinMode(login, INPUT);
   pinMode(energia_solar, INPUT);
+  pinMode(carro_conectado, INPUT);
+  pinMode(emergencia, INPUT);
 
   pinMode(alta_demanda, OUTPUT);
   pinMode(sobrecargaE, OUTPUT);
@@ -33,6 +39,10 @@ void loop() {
   switchlogin = digitalRead(login);
 
   switchsolar = digitalRead(energia_solar);
+
+  switchcarro = digitalRead(carro_conectado);
+
+  switchemergencia = digitalRead(emergencia);
 
   int ldrVal = analogRead(ldr);
 
@@ -141,7 +151,11 @@ void loop() {
 
       digitalRead(
         sobrecargaT
-      )
+      ),
+
+      switchcarro,
+
+      switchemergencia
     );
   }
 }
@@ -154,7 +168,9 @@ void enviarDadosSerial(
   int temperaturaValor,
   int altaDemandaValor,
   int sobrecargaEletricaValor,
-  int sobrecargaTermicaValor
+  int sobrecargaTermicaValor,
+  int carroValor,
+  int emergenciaValor
 ) {
 
   Serial.print(
@@ -217,6 +233,24 @@ void enviarDadosSerial(
 
   Serial.print(
     sobrecargaTermicaValor
+  );
+
+
+  Serial.print(
+    ",\"carro\":"
+  );
+
+  Serial.print(
+    carroValor
+  );
+
+
+  Serial.print(
+    ",\"emergencia\":"
+  );
+
+  Serial.print(
+    emergenciaValor
   );
 
 
