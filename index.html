@@ -1,0 +1,2421 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GoodWe EV · Painel de Gestão</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='6' fill='%232a78d6'/%3E%3Cpath d='M13 4 6 13.5h5l-1 6.5 7-9.5h-5l1-6.5z' fill='white'/%3E%3C/svg%3E">
+
+    <style>
+        /* ==========================================================
+           TOKENS DE COR (tema claro / escuro)
+           ========================================================== */
+
+        :root {
+            color-scheme: light;
+
+            --page: #f3f3f0;
+            --surface: #fcfcfb;
+            --surface-2: #f1f0ec;
+            --border: rgba(11, 11, 11, 0.10);
+            --shadow: 0 1px 2px rgba(11, 11, 11, 0.04), 0 2px 6px rgba(11, 11, 11, 0.05);
+
+            --ink: #0b0b0b;
+            --ink-2: #52514e;
+            --muted: #898781;
+            --grid: #e1e0d9;
+            --axis: #c3c2b7;
+
+            --accent: #2a78d6;
+            --accent-bg: #e6f0fc;
+
+            /* Cores das vagas (ordem fixa por número da vaga) */
+            --s1: #2a78d6;
+            --s2: #eb6834;
+            --s3: #1baf7a;
+            --s4: #eda100;
+            --s5: #e87ba4;
+            --s6: #008300;
+            --s7: #6250d6;
+            --s8: #e34948;
+
+            /* Origem da energia */
+            --solar: #1baf7a;
+            --rede: #b9b8ae;
+
+            /* Status (reservados, sempre com ícone + texto) */
+            --good: #0ca30c;
+            --warning: #fab219;
+            --critical: #d03b3b;
+
+            --good-ink: #006300;
+            --warning-ink: #7a5000;
+            --critical-ink: #a32323;
+            --info-ink: #1c5cab;
+
+            --good-bg: #e5f5e5;
+            --warning-bg: #fff3d6;
+            --critical-bg: #fbe7e7;
+            --info-bg: #e6f0fc;
+            --neutral-bg: #ecebe6;
+
+            --good-track: #cdeccd;
+            --warning-track: #fde5ad;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root:not([data-theme="light"]) {
+                color-scheme: dark;
+
+                --page: #0d0d0d;
+                --surface: #1a1a19;
+                --surface-2: #232321;
+                --border: rgba(255, 255, 255, 0.10);
+                --shadow: none;
+
+                --ink: #f0efec;
+                --ink-2: #c3c2b7;
+                --muted: #898781;
+                --grid: #2c2c2a;
+                --axis: #383835;
+
+                --accent: #3987e5;
+                --accent-bg: #16263b;
+
+                --s1: #3987e5;
+                --s2: #d95926;
+                --s3: #199e70;
+                --s4: #c98500;
+                --s5: #d55181;
+                --s6: #008300;
+                --s7: #9085e9;
+                --s8: #e66767;
+
+                --solar: #199e70;
+                --rede: #6d6c66;
+
+                --good-ink: #3fcf3f;
+                --warning-ink: #fab219;
+                --critical-ink: #ef7d7d;
+                --info-ink: #7fb2ef;
+
+                --good-bg: #13291a;
+                --warning-bg: #33290f;
+                --critical-bg: #3a1717;
+                --info-bg: #16263b;
+                --neutral-bg: #262624;
+
+                --good-track: #1d3d22;
+                --warning-track: #4a3a12;
+            }
+        }
+
+        :root[data-theme="dark"] {
+            color-scheme: dark;
+
+            --page: #0d0d0d;
+            --surface: #1a1a19;
+            --surface-2: #232321;
+            --border: rgba(255, 255, 255, 0.10);
+            --shadow: none;
+
+            --ink: #f0efec;
+            --ink-2: #c3c2b7;
+            --muted: #898781;
+            --grid: #2c2c2a;
+            --axis: #383835;
+
+            --accent: #3987e5;
+            --accent-bg: #16263b;
+
+            --s1: #3987e5;
+            --s2: #d95926;
+            --s3: #199e70;
+            --s4: #c98500;
+            --s5: #d55181;
+            --s6: #008300;
+            --s7: #9085e9;
+            --s8: #e66767;
+
+            --solar: #199e70;
+            --rede: #6d6c66;
+
+            --good-ink: #3fcf3f;
+            --warning-ink: #fab219;
+            --critical-ink: #ef7d7d;
+            --info-ink: #7fb2ef;
+
+            --good-bg: #13291a;
+            --warning-bg: #33290f;
+            --critical-bg: #3a1717;
+            --info-bg: #16263b;
+            --neutral-bg: #262624;
+
+            --good-track: #1d3d22;
+            --warning-track: #4a3a12;
+        }
+
+        /* ==========================================================
+           BASE
+           ========================================================== */
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+            background: var(--page);
+            color: var(--ink);
+            font-size: 14px;
+            line-height: 1.45;
+        }
+
+        svg.icon {
+            width: 16px;
+            height: 16px;
+            flex: none;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        .muted {
+            color: var(--ink-2);
+        }
+
+        .num {
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* ==========================================================
+           BARRA SUPERIOR
+           ========================================================== */
+
+        .topbar {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .topbar-inner {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 12px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .brand-mark {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            background: var(--accent);
+            color: #fff;
+            display: grid;
+            place-items: center;
+        }
+
+        .brand-mark svg.icon {
+            width: 20px;
+            height: 20px;
+            fill: #fff;
+            stroke: none;
+        }
+
+        .brand-name {
+            font-size: 16px;
+            font-weight: 700;
+            line-height: 1.2;
+        }
+
+        .brand-sub {
+            font-size: 13px;
+            color: var(--ink-2);
+        }
+
+        .topbar-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .live {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            border-radius: 999px;
+            background: var(--neutral-bg);
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        .live-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--muted);
+        }
+
+        .live[data-estado="online"] {
+            background: var(--good-bg);
+        }
+
+        .live[data-estado="online"] .live-dot {
+            background: var(--good);
+            animation: pulso 2s ease-out infinite;
+        }
+
+        .live[data-estado="offline"] {
+            background: var(--critical-bg);
+        }
+
+        .live[data-estado="offline"] .live-dot {
+            background: var(--critical);
+        }
+
+        @keyframes pulso {
+            0% { box-shadow: 0 0 0 0 rgba(12, 163, 12, 0.5); }
+            70% { box-shadow: 0 0 0 7px rgba(12, 163, 12, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(12, 163, 12, 0); }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .live[data-estado="online"] .live-dot { animation: none; }
+            .meter-fill, .stack-seg { transition: none !important; }
+        }
+
+        .updated {
+            font-size: 13px;
+            color: var(--ink-2);
+        }
+
+        .icon-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            color: var(--ink);
+            display: grid;
+            place-items: center;
+            cursor: pointer;
+        }
+
+        .icon-btn:hover {
+            background: var(--surface-2);
+        }
+
+        .icon-btn:focus-visible,
+        .chart-svg:focus-visible,
+        summary:focus-visible,
+        .text-btn:focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 2px;
+        }
+
+        /* ==========================================================
+           FAIXA DE ALERTAS
+           ========================================================== */
+
+        .banner {
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+            padding: 12px 16px;
+            border-radius: var(--radius, 12px);
+            margin-bottom: 20px;
+            border: 1px solid var(--border);
+        }
+
+        .banner[hidden] {
+            display: none;
+        }
+
+        .banner svg.icon {
+            width: 20px;
+            height: 20px;
+            margin-top: 1px;
+        }
+
+        .banner[data-nivel="critical"] {
+            background: var(--critical-bg);
+        }
+
+        .banner[data-nivel="critical"] svg.icon {
+            color: var(--critical-ink);
+        }
+
+        .banner[data-nivel="warning"] {
+            background: var(--warning-bg);
+        }
+
+        .banner[data-nivel="warning"] svg.icon {
+            color: var(--warning-ink);
+        }
+
+        .banner-title {
+            font-weight: 700;
+        }
+
+        .banner ul {
+            list-style: none;
+            margin-top: 2px;
+        }
+
+        /* ==========================================================
+           SEÇÕES E CARTÕES
+           ========================================================== */
+
+        .section {
+            margin-bottom: 28px;
+        }
+
+        .section-head {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .section-head h2 {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .section-head p {
+            font-size: 13px;
+            color: var(--ink-2);
+        }
+
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            padding: 18px;
+            min-width: 0;
+        }
+
+        .card-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            gap: 8px 12px;
+            margin-bottom: 14px;
+        }
+
+        .card-title {
+            font-size: 15px;
+            font-weight: 700;
+        }
+
+        .card-sub {
+            font-size: 13px;
+            color: var(--ink-2);
+        }
+
+        .stale .data-region {
+            opacity: 0.55;
+            transition: opacity 0.3s;
+        }
+
+        /* ==========================================================
+           INDICADORES (KPIs)
+           ========================================================== */
+
+        .kpi-row-label {
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: var(--ink-2);
+            margin: 0 0 8px 2px;
+        }
+
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .kpi {
+            padding: 16px;
+        }
+
+        .kpi-label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            color: var(--ink-2);
+            font-weight: 600;
+        }
+
+        .kpi-value {
+            font-size: 26px;
+            font-weight: 700;
+            margin-top: 6px;
+            line-height: 1.15;
+            white-space: nowrap;
+        }
+
+        .kpi-value .unit {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--ink-2);
+            margin-left: 3px;
+        }
+
+        .kpi-sub {
+            font-size: 12.5px;
+            color: var(--ink-2);
+            margin-top: 4px;
+        }
+
+        .kpi .meter {
+            margin-top: 10px;
+        }
+
+        /* ==========================================================
+           MEDIDORES
+           ========================================================== */
+
+        .meter {
+            height: 8px;
+            border-radius: 4px;
+            background: var(--surface-2);
+            overflow: hidden;
+        }
+
+        .meter-fill {
+            height: 100%;
+            width: 0;
+            border-radius: 4px;
+            background: var(--accent);
+            transition: width 0.5s ease;
+        }
+
+        .meter[data-nivel="good"] {
+            background: var(--good-track);
+        }
+
+        .meter[data-nivel="good"] .meter-fill {
+            background: var(--good);
+        }
+
+        .meter[data-nivel="warning"] {
+            background: var(--warning-track);
+        }
+
+        .meter[data-nivel="warning"] .meter-fill {
+            background: var(--warning);
+        }
+
+        .meter[data-nivel="solar"] .meter-fill {
+            background: var(--solar);
+        }
+
+        /* ==========================================================
+           VAGAS
+           ========================================================== */
+
+        .vagas-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(min(100%, 420px), 1fr));
+            gap: 16px;
+        }
+
+        .vaga {
+            border-top: 4px solid var(--border);
+        }
+
+        .vaga[data-nivel="good"] { border-top-color: var(--good); }
+        .vaga[data-nivel="warning"] { border-top-color: var(--warning); }
+        .vaga[data-nivel="critical"] { border-top-color: var(--critical); }
+        .vaga[data-nivel="neutral"] { border-top-color: var(--axis); }
+
+        .vaga-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 17px;
+            font-weight: 700;
+        }
+
+        .serie-key {
+            width: 10px;
+            height: 10px;
+            border-radius: 3px;
+            flex: none;
+        }
+
+        .vaga-sub {
+            font-size: 12.5px;
+            color: var(--ink-2);
+            margin-top: 2px;
+        }
+
+        .pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 12.5px;
+            font-weight: 700;
+            white-space: nowrap;
+            background: var(--neutral-bg);
+            color: var(--ink);
+        }
+
+        .pill[data-nivel="good"] { background: var(--good-bg); }
+        .pill[data-nivel="good"] svg.icon { color: var(--good-ink); }
+        .pill[data-nivel="warning"] { background: var(--warning-bg); }
+        .pill[data-nivel="warning"] svg.icon { color: var(--warning-ink); }
+        .pill[data-nivel="critical"] { background: var(--critical-bg); }
+        .pill[data-nivel="critical"] svg.icon { color: var(--critical-ink); }
+        .pill[data-nivel="neutral"] svg.icon { color: var(--ink-2); }
+
+        .causa {
+            display: flex;
+            gap: 8px;
+            align-items: flex-start;
+            padding: 10px 12px;
+            border-radius: 8px;
+            margin-bottom: 14px;
+            font-size: 13px;
+        }
+
+        .causa[hidden] {
+            display: none;
+        }
+
+        .causa[data-nivel="critical"] { background: var(--critical-bg); }
+        .causa[data-nivel="critical"] svg.icon { color: var(--critical-ink); }
+        .causa[data-nivel="warning"] { background: var(--warning-bg); }
+        .causa[data-nivel="warning"] svg.icon { color: var(--warning-ink); }
+
+        .potencia {
+            margin-bottom: 16px;
+        }
+
+        .potencia-top {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .potencia-valor {
+            font-size: 30px;
+            font-weight: 700;
+            line-height: 1;
+        }
+
+        .potencia-valor .unit {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--ink-2);
+            margin-left: 3px;
+        }
+
+        .potencia-cap {
+            font-size: 12.5px;
+            color: var(--ink-2);
+            text-align: right;
+        }
+
+        .sessao {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 12px 16px;
+            padding: 14px 0;
+            border-top: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 14px;
+        }
+
+        .sessao dt,
+        .params dt {
+            font-size: 12px;
+            color: var(--ink-2);
+        }
+
+        .sessao dd {
+            font-size: 15px;
+            font-weight: 700;
+            margin-top: 1px;
+        }
+
+        .sensores {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 8px;
+        }
+
+        .sensor {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 10px;
+            border-radius: 8px;
+            background: var(--surface-2);
+            min-width: 0;
+        }
+
+        .sensor svg.icon {
+            color: var(--ink-2);
+        }
+
+        .sensor[data-nivel="warning"] {
+            background: var(--warning-bg);
+        }
+
+        .sensor[data-nivel="warning"] svg.icon {
+            color: var(--warning-ink);
+        }
+
+        .sensor[data-nivel="critical"] {
+            background: var(--critical-bg);
+        }
+
+        .sensor[data-nivel="critical"] svg.icon {
+            color: var(--critical-ink);
+        }
+
+        .sensor[data-nivel="solar"] svg.icon {
+            color: var(--solar);
+        }
+
+        .sensor-text {
+            min-width: 0;
+        }
+
+        .sensor-label {
+            font-size: 11.5px;
+            color: var(--ink-2);
+            line-height: 1.2;
+        }
+
+        .sensor-valor {
+            font-size: 13px;
+            font-weight: 700;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .vazio {
+            padding: 28px;
+            text-align: left;
+        }
+
+        .vazio h3 {
+            font-size: 16px;
+            margin-bottom: 8px;
+        }
+
+        .vazio ol {
+            margin: 8px 0 0 20px;
+            color: var(--ink-2);
+        }
+
+        .vazio code {
+            font-size: 12.5px;
+            background: var(--surface-2);
+            padding: 1px 6px;
+            border-radius: 4px;
+        }
+
+        /* ==========================================================
+           GRÁFICOS
+           ========================================================== */
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+            gap: 16px;
+        }
+
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px 16px;
+            font-size: 12.5px;
+            color: var(--ink-2);
+        }
+
+        .legend-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .line-key {
+            width: 16px;
+            height: 2px;
+            border-radius: 1px;
+            flex: none;
+        }
+
+        .chart-wrap {
+            position: relative;
+            margin-top: 8px;
+        }
+
+        .chart-svg {
+            display: block;
+            width: 100%;
+            touch-action: pan-y;
+        }
+
+        .chart-svg .grid {
+            stroke: var(--grid);
+            stroke-width: 1;
+        }
+
+        .chart-svg .axis {
+            stroke: var(--axis);
+            stroke-width: 1;
+        }
+
+        .chart-svg .tick {
+            fill: var(--muted);
+            font-size: 11px;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .chart-svg .end-label {
+            fill: var(--ink-2);
+            font-size: 12px;
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .chart-svg .crosshair {
+            stroke: var(--ink-2);
+            stroke-width: 1;
+        }
+
+        .chart-svg .aguardando {
+            fill: var(--ink-2);
+            font-size: 13px;
+        }
+
+        .tooltip {
+            position: absolute;
+            pointer-events: none;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.14);
+            border-radius: 8px;
+            padding: 8px 10px;
+            font-size: 12.5px;
+            min-width: 140px;
+            z-index: 2;
+        }
+
+        .tooltip[hidden] {
+            display: none;
+        }
+
+        .tooltip-time {
+            color: var(--ink-2);
+            margin-bottom: 4px;
+        }
+
+        .tooltip-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+        }
+
+        .tooltip-row strong {
+            font-variant-numeric: tabular-nums;
+        }
+
+        .tooltip-row span.nome {
+            color: var(--ink-2);
+        }
+
+        details.tabela {
+            margin-top: 12px;
+        }
+
+        details.tabela summary {
+            cursor: pointer;
+            font-size: 13px;
+            color: var(--ink-2);
+            width: fit-content;
+            border-radius: 4px;
+        }
+
+        .table-scroll {
+            overflow-x: auto;
+            margin-top: 8px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        th, td {
+            text-align: right;
+            padding: 6px 8px;
+            border-bottom: 1px solid var(--border);
+            font-variant-numeric: tabular-nums;
+            white-space: nowrap;
+        }
+
+        th:first-child, td:first-child {
+            text-align: left;
+        }
+
+        th {
+            color: var(--ink-2);
+            font-weight: 600;
+        }
+
+        /* Barra empilhada de origem da energia */
+        .stack {
+            display: flex;
+            gap: 2px;
+            height: 24px;
+            margin: 6px 0 14px;
+        }
+
+        .stack-seg {
+            height: 100%;
+            min-width: 0;
+            transition: width 0.5s ease;
+        }
+
+        .stack-seg:first-child {
+            border-radius: 4px 0 0 4px;
+        }
+
+        .stack-seg:last-child {
+            border-radius: 0 4px 4px 0;
+        }
+
+        .stack-seg:only-child,
+        .stack-seg.unico {
+            border-radius: 4px;
+        }
+
+        .stack-vazio {
+            height: 100%;
+            width: 100%;
+            border-radius: 4px;
+            background: var(--surface-2);
+        }
+
+        .origem-lista {
+            list-style: none;
+            display: grid;
+            gap: 8px;
+        }
+
+        .origem-item {
+            display: grid;
+            grid-template-columns: 12px 1fr auto auto;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+        }
+
+        .swatch {
+            width: 12px;
+            height: 12px;
+            border-radius: 3px;
+        }
+
+        .origem-item .pct {
+            min-width: 48px;
+            text-align: right;
+            font-weight: 700;
+        }
+
+        .destaque {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 16px;
+            padding: 12px;
+            border-radius: 10px;
+            background: var(--surface-2);
+        }
+
+        .destaque-icone {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: grid;
+            place-items: center;
+            background: var(--surface);
+            color: var(--solar);
+            flex: none;
+        }
+
+        .destaque-valor {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        /* ==========================================================
+           EVENTOS E PARÂMETROS
+           ========================================================== */
+
+        .eventos {
+            list-style: none;
+            max-height: 320px;
+            overflow-y: auto;
+        }
+
+        .evento {
+            display: grid;
+            grid-template-columns: 64px 20px 1fr;
+            gap: 8px;
+            align-items: start;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border);
+            font-size: 13px;
+        }
+
+        .evento:last-child {
+            border-bottom: none;
+        }
+
+        .evento time {
+            color: var(--ink-2);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .evento svg.icon {
+            margin-top: 1px;
+        }
+
+        .evento[data-nivel="good"] svg.icon { color: var(--good-ink); }
+        .evento[data-nivel="warning"] svg.icon { color: var(--warning-ink); }
+        .evento[data-nivel="critical"] svg.icon { color: var(--critical-ink); }
+        .evento[data-nivel="info"] svg.icon { color: var(--info-ink); }
+
+        .evento-vaga {
+            font-weight: 700;
+        }
+
+        .eventos-vazio {
+            color: var(--ink-2);
+            font-size: 13px;
+            padding: 8px 0;
+        }
+
+        .text-btn {
+            background: none;
+            border: none;
+            color: var(--ink-2);
+            font: inherit;
+            font-size: 13px;
+            cursor: pointer;
+            border-radius: 4px;
+            padding: 2px 4px;
+        }
+
+        .text-btn:hover {
+            color: var(--ink);
+            text-decoration: underline;
+        }
+
+        .params {
+            display: grid;
+            gap: 10px;
+        }
+
+        .params div {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .params div:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .params dt {
+            font-size: 13px;
+        }
+
+        .params dd {
+            font-weight: 700;
+            font-size: 13px;
+            text-align: right;
+        }
+
+        footer {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 8px 24px 32px;
+            font-size: 12.5px;
+            color: var(--ink-2);
+        }
+
+        /* ==========================================================
+           RESPONSIVO
+           ========================================================== */
+
+        @media (max-width: 1000px) {
+            .grid-2 {
+                grid-template-columns: minmax(0, 1fr);
+            }
+        }
+
+        @media (max-width: 900px) {
+            .kpi-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 16px;
+            }
+
+            /* No celular a barra não fica fixa para não ocupar a tela */
+            .topbar {
+                position: static;
+            }
+
+            .topbar-inner {
+                padding: 10px 16px;
+            }
+
+            .section-head {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 2px;
+            }
+
+            .updated {
+                display: none;
+            }
+
+            .kpi-value {
+                font-size: 21px;
+            }
+
+            .kpi {
+                padding: 12px;
+            }
+
+            .sessao {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .sensores {
+                grid-template-columns: minmax(0, 1fr);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<header class="topbar">
+    <div class="topbar-inner">
+
+        <div class="brand">
+            <div class="brand-mark" aria-hidden="true">
+                <svg class="icon" viewBox="0 0 24 24"><path d="M13 3 5 13.5h5.5L9.5 21 18 10.5h-5.5L13 3z"/></svg>
+            </div>
+            <div>
+                <div class="brand-name">GoodWe EV Charging</div>
+                <div class="brand-sub">Painel de Gestão · Loja Centro</div>
+            </div>
+        </div>
+
+        <div class="topbar-right">
+            <span class="live" id="live" data-estado="conectando" role="status">
+                <span class="live-dot" aria-hidden="true"></span>
+                <span id="live-texto">Conectando…</span>
+            </span>
+            <span class="updated" id="atualizado">Aguardando dados</span>
+            <button class="icon-btn" id="btn-tema" type="button" aria-label="Alternar tema claro/escuro" title="Alternar tema claro/escuro"></button>
+        </div>
+
+    </div>
+</header>
+
+
+<main class="container" id="app">
+
+    <div class="banner" id="banner" role="alert" hidden></div>
+
+
+    <!-- ======================== INDICADORES ======================== -->
+    <section class="section data-region" aria-labelledby="t-visao">
+
+        <div class="section-head">
+            <h2 id="t-visao">Visão geral da loja</h2>
+            <p>Indicadores acumulados desde o início da operação</p>
+        </div>
+
+        <div class="kpi-row-label">Operação e energia</div>
+        <div class="kpi-grid">
+
+            <div class="card kpi">
+                <div class="kpi-label" data-icone="plug">Sessões ativas</div>
+                <div class="kpi-value" id="kpi-sessoes">--</div>
+                <div class="kpi-sub" id="kpi-sessoes-sub">&nbsp;</div>
+            </div>
+
+            <div class="card kpi">
+                <div class="kpi-label" data-icone="bolt">Potência em uso</div>
+                <div class="kpi-value" id="kpi-potencia">--</div>
+                <div class="meter" data-nivel="good" id="kpi-potencia-meter"
+                     role="meter" aria-label="Uso da potência instalada" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+                    <div class="meter-fill"></div>
+                </div>
+                <div class="kpi-sub" id="kpi-potencia-sub">&nbsp;</div>
+            </div>
+
+            <div class="card kpi">
+                <div class="kpi-label" data-icone="activity">Energia entregue</div>
+                <div class="kpi-value" id="kpi-energia">--</div>
+                <div class="kpi-sub">total de todas as vagas</div>
+            </div>
+
+            <div class="card kpi">
+                <div class="kpi-label" data-icone="sun">Energia solar</div>
+                <div class="kpi-value" id="kpi-solar">--</div>
+                <div class="meter" data-nivel="solar" id="kpi-solar-meter"
+                     role="meter" aria-label="Participação da energia solar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+                    <div class="meter-fill"></div>
+                </div>
+                <div class="kpi-sub" id="kpi-solar-sub">&nbsp;</div>
+            </div>
+
+        </div>
+
+        <div class="kpi-row-label">Resultado financeiro</div>
+        <div class="kpi-grid">
+
+            <div class="card kpi">
+                <div class="kpi-label" data-icone="money">Receita bruta</div>
+                <div class="kpi-value" id="kpi-receita">--</div>
+                <div class="kpi-sub" id="kpi-receita-sub">&nbsp;</div>
+            </div>
+
+            <div class="card kpi">
+                <div class="kpi-label" data-icone="plugGrid">Custo de energia</div>
+                <div class="kpi-value" id="kpi-custo">--</div>
+                <div class="kpi-sub">energia comprada da rede</div>
+            </div>
+
+            <div class="card kpi">
+                <div class="kpi-label" data-icone="trend">Lucro líquido</div>
+                <div class="kpi-value" id="kpi-lucro">--</div>
+                <div class="kpi-sub" id="kpi-lucro-sub">&nbsp;</div>
+            </div>
+
+            <div class="card kpi">
+                <div class="kpi-label" data-icone="leaf">Economia com solar</div>
+                <div class="kpi-value" id="kpi-economia">--</div>
+                <div class="kpi-sub">custo de rede evitado</div>
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- ======================== VAGAS ======================== -->
+    <section class="section data-region" aria-labelledby="t-vagas">
+
+        <div class="section-head">
+            <h2 id="t-vagas">Carregadores</h2>
+            <p id="vagas-resumo">&nbsp;</p>
+        </div>
+
+        <div class="vagas-grid" id="vagas"></div>
+
+    </section>
+
+
+    <!-- ======================== GRÁFICOS ======================== -->
+    <section class="section grid-2 data-region" aria-label="Gráficos">
+
+        <div class="card">
+            <div class="card-head">
+                <div>
+                    <div class="card-title">Potência em tempo real</div>
+                    <div class="card-sub">kW por vaga · últimos 3 minutos</div>
+                </div>
+                <div class="legend" id="legenda-potencia"></div>
+            </div>
+
+            <div class="chart-wrap" id="grafico-potencia">
+                <div class="tooltip" id="tooltip-potencia" hidden></div>
+            </div>
+
+            <details class="tabela" id="tabela-potencia-details">
+                <summary>Ver dados em tabela</summary>
+                <div class="table-scroll" id="tabela-potencia"></div>
+            </details>
+        </div>
+
+        <div class="card">
+            <div class="card-head">
+                <div>
+                    <div class="card-title">Origem da energia entregue</div>
+                    <div class="card-sub">Solar × rede elétrica, acumulado</div>
+                </div>
+            </div>
+
+            <div class="stack" id="origem-barra" role="img" aria-label="Origem da energia"></div>
+
+            <ul class="origem-lista">
+                <li class="origem-item">
+                    <span class="swatch" style="background: var(--solar)"></span>
+                    <span>Solar</span>
+                    <span class="num muted" id="origem-solar-kwh">--</span>
+                    <span class="pct num" id="origem-solar-pct">--</span>
+                </li>
+                <li class="origem-item">
+                    <span class="swatch" style="background: var(--rede)"></span>
+                    <span>Rede elétrica</span>
+                    <span class="num muted" id="origem-rede-kwh">--</span>
+                    <span class="pct num" id="origem-rede-pct">--</span>
+                </li>
+            </ul>
+
+            <div class="destaque">
+                <div class="destaque-icone" data-icone="leaf" aria-hidden="true"></div>
+                <div>
+                    <div class="card-sub">Economia gerada pela energia solar</div>
+                    <div class="destaque-valor" id="origem-economia">--</div>
+                </div>
+            </div>
+        </div>
+
+    </section>
+
+
+    <!-- ======================== EVENTOS E PARÂMETROS ======================== -->
+    <section class="section grid-2" aria-label="Eventos e parâmetros">
+
+        <div class="card">
+            <div class="card-head">
+                <div>
+                    <div class="card-title">Registro de eventos</div>
+                    <div class="card-sub">Mudanças de estado detectadas nesta sessão do painel</div>
+                </div>
+                <button class="text-btn" id="btn-limpar" type="button">Limpar</button>
+            </div>
+            <ol class="eventos" id="eventos" aria-live="polite"></ol>
+        </div>
+
+        <div class="card">
+            <div class="card-head">
+                <div>
+                    <div class="card-title">Parâmetros do sistema</div>
+                    <div class="card-sub">Regras aplicadas pelo backend</div>
+                </div>
+            </div>
+            <dl class="params" id="parametros"></dl>
+        </div>
+
+    </section>
+
+</main>
+
+<footer>
+    GoodWe EV Challenge · Protótipo de monitoramento de recarga de veículos elétricos.
+    Dados simulados por circuitos Arduino no Tinkercad e processados pelo backend Flask.
+</footer>
+
+
+<script>
+
+    // ==========================================================
+    // CONFIGURAÇÃO
+    // ==========================================================
+
+    // Servido pelo Flask (porta 8080): usa o caminho relativo.
+    // Aberto direto do arquivo ou por outro servidor (ex.: Live Server):
+    // aponta para o backend em localhost:8080.
+    const API_URL =
+        window.location.port === "8080"
+            ? "/api/status"
+            : "http://localhost:8080/api/status";
+
+    const INTERVALO_MS = 1000;
+    const JANELA_MS = 3 * 60 * 1000;
+    const MAX_EVENTOS = 100;
+
+    // Valores usados até a primeira resposta da API
+    const PARAMETROS_PADRAO = {
+        potenciaNominalKW: 7.04,
+        fatorPotenciaSemSolar: 0.5,
+        custoRedeKWh: 0.95,
+        custoSolarKWh: 0,
+        fatorTempo: 60
+    };
+
+    const estado = {
+        conexao: "conectando",
+        dados: null,
+        parametros: { ...PARAMETROS_PADRAO },
+        historico: new Map(),   // device -> [{ t, v }]
+        amostras: [],           // instantes das leituras
+        anteriores: new Map(),  // device -> último estado conhecido
+        cards: new Map(),       // device -> elementos do card
+        eventos: [],
+        hoverFrac: null,
+        geo: null
+    };
+
+
+    // ==========================================================
+    // ÍCONES (SVG inline, sem dependências externas)
+    // ==========================================================
+
+    const ICONES = {
+        bolt: '<path d="M13 3 5 13.5h5.5L9.5 21 18 10.5h-5.5L13 3z"/>',
+        sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
+        moon: '<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>',
+        plug: '<path d="M9 2v5M15 2v5M6 7h12v4a6 6 0 0 1-12 0V7zM12 17v5"/>',
+        plugGrid: '<path d="M4 21 8 3M20 21 16 3M6 12h12M5 16.5h14M7.5 7.5h9"/>',
+        thermo: '<path d="M14 14.8V4a2 2 0 0 0-4 0v10.8a4 4 0 1 0 4 0z"/>',
+        user: '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
+        clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+        alert: '<path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/>',
+        stop: '<path d="M7.9 2h8.2L22 7.9v8.2L16.1 22H7.9L2 16.1V7.9z"/><path d="m15 9-6 6M9 9l6 6"/>',
+        check: '<circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/>',
+        info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>',
+        activity: '<path d="M22 12h-4l-3 9L9 3l-3 9H2"/>',
+        money: '<circle cx="12" cy="12" r="9"/><path d="M15 9.5c-.5-1-1.6-1.5-3-1.5-1.7 0-3 .8-3 2s1.3 1.7 3 2 3 .8 3 2-1.3 2-3 2c-1.4 0-2.5-.5-3-1.5M12 6v2M12 16v2"/>',
+        trend: '<path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/>',
+        leaf: '<path d="M11 20A7 7 0 0 1 4 13c0-6 6-9 16-9 0 10-3 16-9 16z"/><path d="M4 21c4-4 7-6 11-8"/>',
+        light: '<path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7V16h8v-1.3A7 7 0 0 0 12 2z"/>',
+        wifiOff: '<path d="M2 2l20 20M8.5 16.5a5 5 0 0 1 7 0M5 13a10 10 0 0 1 5.2-2.8M19 13a10 10 0 0 0-2.3-1.7M2 8.8a15 15 0 0 1 4.2-2.7M22 8.8A15 15 0 0 0 10.7 5M12 20h.01"/>'
+    };
+
+    function icone(nome) {
+        const ns = "http://www.w3.org/2000/svg";
+        const s = document.createElementNS(ns, "svg");
+        s.setAttribute("class", "icon");
+        s.setAttribute("viewBox", "0 0 24 24");
+        s.setAttribute("aria-hidden", "true");
+        // Conteúdo fixo, definido acima (não vem da API)
+        s.innerHTML = ICONES[nome] || ICONES.info;
+        return s;
+    }
+
+    // Coloca ícones nos elementos marcados com data-icone
+    document.querySelectorAll("[data-icone]").forEach(alvo => {
+        alvo.prepend(icone(alvo.dataset.icone));
+    });
+
+
+    // ==========================================================
+    // FORMATAÇÃO
+    // ==========================================================
+
+    function numeroBR(valor, casas = 2) {
+        return Number(valor ?? 0).toLocaleString("pt-BR", {
+            minimumFractionDigits: casas,
+            maximumFractionDigits: casas
+        });
+    }
+
+    function moedaBR(valor) {
+        return Number(valor ?? 0).toLocaleString("pt-BR", {
+            style: "currency",
+            currency: "BRL"
+        });
+    }
+
+    function horaBR(data) {
+        return data.toLocaleTimeString("pt-BR");
+    }
+
+    function duracaoBR(minutos) {
+        const m = Number(minutos ?? 0);
+        if (m < 60) {
+            return `${numeroBR(m, 1)} min`;
+        }
+        const total = Math.floor(m);
+        const h = Math.floor(total / 60);
+        return `${h} h ${String(total % 60).padStart(2, "0")} min`;
+    }
+
+    function nomeVaga(c) {
+        return `Vaga ${String(c.numeroVaga ?? "?").padStart(2, "0")}`;
+    }
+
+    function modeloVaga(c) {
+        const partes = String(c.nome ?? "").split(" - ");
+        return partes.length > 1 ? partes.slice(1).join(" - ") : "GoodWe HCA G2";
+    }
+
+    function corSerie(numeroVaga) {
+        const slot = ((Number(numeroVaga) || 1) - 1) % 8 + 1;
+        return `var(--s${slot})`;
+    }
+
+
+    // ==========================================================
+    // HELPERS DE DOM (textos sempre via textContent)
+    // ==========================================================
+
+    function el(tag, props = {}, ...filhos) {
+        const n = document.createElement(tag);
+        for (const [k, v] of Object.entries(props)) {
+            if (v === null || v === undefined) continue;
+            if (k === "class") n.className = v;
+            else if (k === "text") n.textContent = v;
+            else if (k === "style") n.setAttribute("style", v);
+            else n.setAttribute(k, v);
+        }
+        for (const f of filhos) {
+            if (f !== null && f !== undefined) n.append(f);
+        }
+        return n;
+    }
+
+    function svgEl(tag, attrs = {}) {
+        const n = document.createElementNS("http://www.w3.org/2000/svg", tag);
+        for (const [k, v] of Object.entries(attrs)) {
+            if (v !== null && v !== undefined) n.setAttribute(k, v);
+        }
+        return n;
+    }
+
+    function setTexto(id, texto) {
+        const alvo = document.getElementById(id);
+        if (alvo && alvo.textContent !== texto) alvo.textContent = texto;
+    }
+
+    function valorComUnidade(alvo, valor, unidade) {
+        alvo.replaceChildren(
+            document.createTextNode(valor),
+            el("span", { class: "unit", text: unidade })
+        );
+    }
+
+
+    // ==========================================================
+    // TEMA CLARO / ESCURO
+    // ==========================================================
+
+    const botaoTema = document.getElementById("btn-tema");
+
+    function temaAtual() {
+        const forcado = document.documentElement.dataset.theme;
+        if (forcado) return forcado;
+        return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    }
+
+    function atualizarBotaoTema() {
+        botaoTema.replaceChildren(icone(temaAtual() === "dark" ? "sun" : "moon"));
+    }
+
+    try {
+        const salvo = localStorage.getItem("goodwe-tema");
+        if (salvo === "light" || salvo === "dark") {
+            document.documentElement.dataset.theme = salvo;
+        }
+    } catch (e) { /* armazenamento indisponível */ }
+
+    botaoTema.addEventListener("click", () => {
+        const novo = temaAtual() === "dark" ? "light" : "dark";
+        document.documentElement.dataset.theme = novo;
+        try { localStorage.setItem("goodwe-tema", novo); } catch (e) { }
+        atualizarBotaoTema();
+        renderGraficoPotencia();
+    });
+
+    atualizarBotaoTema();
+
+
+    // ==========================================================
+    // ESTADO DE CADA VAGA
+    // ==========================================================
+
+    function situacaoVaga(c) {
+        if (c.status === "erro") {
+            return { nivel: "critical", texto: "Bloqueado", icone: "stop" };
+        }
+        if (c.status === "alerta") {
+            return c.carregando === 1
+                ? { nivel: "warning", texto: "Potência reduzida", icone: "alert" }
+                : { nivel: "warning", texto: "Alta demanda", icone: "alert" };
+        }
+        if (c.status === "operacional") {
+            return c.carregando === 1
+                ? { nivel: "good", texto: "Carregando", icone: "bolt" }
+                : { nivel: "good", texto: "Operacional", icone: "check" };
+        }
+        if (c.status === "livre") {
+            return { nivel: "neutral", texto: "Disponível", icone: "plug" };
+        }
+        return { nivel: "neutral", texto: "Aguardando", icone: "clock" };
+    }
+
+    function causaVaga(c) {
+        const p = estado.parametros;
+        if (c.status === "erro") {
+            const motivos = [];
+            if (c.sobrecargaEletrica === 1) motivos.push(`sobrecarga elétrica (LDR ${c.ldr})`);
+            if (c.sobrecargaTermica === 1) motivos.push(`sobrecarga térmica (${c.temperatura} °C)`);
+            const lista = motivos.length ? motivos.join(" e ") : "condição de bloqueio";
+            return {
+                nivel: "critical",
+                texto: `Recarga interrompida por segurança: ${lista}.`
+            };
+        }
+        if (c.status === "alerta") {
+            const reduzida = p.potenciaNominalKW * p.fatorPotenciaSemSolar;
+            return {
+                nivel: "warning",
+                texto: `Alta demanda na instalação sem energia solar disponível. Potência limitada a ${numeroBR(p.fatorPotenciaSemSolar * 100, 0)}% (${numeroBR(reduzida)} kW).`
+            };
+        }
+        return null;
+    }
+
+
+    // ==========================================================
+    // INDICADORES
+    // ==========================================================
+
+    function renderKPIs(d) {
+        const p = estado.parametros;
+        const qtd = Number(d.quantidadeCarregadores ?? 0);
+
+        setTexto("kpi-sessoes", String(d.sessoesAtivas ?? 0));
+        setTexto("kpi-sessoes-sub", qtd === 1 ? "de 1 vaga conectada" : `de ${qtd} vagas conectadas`);
+
+        const capacidade = p.potenciaNominalKW * qtd;
+        const uso = capacidade > 0 ? (d.potenciaTotal / capacidade) * 100 : 0;
+        valorComUnidade(document.getElementById("kpi-potencia"), numeroBR(d.potenciaTotal), "kW");
+        atualizarMedidor("kpi-potencia-meter", uso);
+        setTexto("kpi-potencia-sub", `${numeroBR(uso, 0)}% de ${numeroBR(capacidade)} kW instalados`);
+
+        valorComUnidade(document.getElementById("kpi-energia"), numeroBR(d.energiaTotal), "kWh");
+
+        valorComUnidade(document.getElementById("kpi-solar"), numeroBR(d.percentualSolar, 1), "%");
+        atualizarMedidor("kpi-solar-meter", d.percentualSolar);
+        setTexto("kpi-solar-sub", `${numeroBR(d.energiaSolarTotal)} kWh de fonte solar`);
+
+        setTexto("kpi-receita", moedaBR(d.receitaBruta));
+        setTexto("kpi-receita-sub", `tarifa de ${moedaBR(d.tarifaKWh)}/kWh`);
+
+        setTexto("kpi-custo", moedaBR(d.custoEnergiaTotal));
+
+        setTexto("kpi-lucro", moedaBR(d.lucroLiquido));
+        const margem = d.receitaBruta > 0 ? (d.lucroLiquido / d.receitaBruta) * 100 : 0;
+        setTexto("kpi-lucro-sub", `margem de ${numeroBR(margem, 1)}%`);
+
+        setTexto("kpi-economia", moedaBR(d.economiaSolar));
+    }
+
+    function atualizarMedidor(id, percentual) {
+        const m = document.getElementById(id);
+        const pct = Math.max(0, Math.min(100, Number(percentual) || 0));
+        m.querySelector(".meter-fill").style.width = `${pct}%`;
+        m.setAttribute("aria-valuenow", pct.toFixed(0));
+    }
+
+
+    // ==========================================================
+    // CARDS DAS VAGAS
+    // ==========================================================
+
+    function criarCard(c) {
+        const r = {};
+
+        r.root = el("article", { class: "card vaga", "aria-label": nomeVaga(c) });
+
+        // Cabeçalho
+        r.key = el("span", { class: "serie-key", "aria-hidden": "true" });
+        r.nome = el("span");
+        r.sub = el("div", { class: "vaga-sub" });
+        r.pill = el("span", { class: "pill" });
+        r.root.append(
+            el("div", { class: "card-head" },
+                el("div", {},
+                    el("div", { class: "vaga-title" }, r.key, r.nome),
+                    r.sub
+                ),
+                r.pill
+            )
+        );
+
+        // Motivo do alerta
+        r.causa = el("div", { class: "causa", hidden: "" });
+        r.root.append(r.causa);
+
+        // Potência
+        r.potValor = el("div", { class: "potencia-valor num" });
+        r.potCap = el("div", { class: "potencia-cap" });
+        r.meter = el("div", {
+            class: "meter", role: "meter", "aria-label": "Potência em relação à nominal",
+            "aria-valuemin": "0", "aria-valuemax": "100", "aria-valuenow": "0"
+        }, el("div", { class: "meter-fill" }));
+        r.root.append(
+            el("div", { class: "potencia" },
+                el("div", { class: "potencia-top" }, r.potValor, r.potCap),
+                r.meter
+            )
+        );
+
+        // Dados da sessão
+        const campos = [
+            ["energia", "Energia da sessão"],
+            ["tempo", "Tempo de recarga"],
+            ["receita", "Receita"],
+            ["custo", "Custo da energia"],
+            ["lucro", "Lucro"],
+            ["energiaTotal", "Energia total"]
+        ];
+        const dl = el("dl", { class: "sessao" });
+        r.sessao = {};
+        for (const [chave, rotulo] of campos) {
+            r.sessao[chave] = el("dd", { class: "num" });
+            dl.append(el("div", {}, el("dt", { text: rotulo }), r.sessao[chave]));
+        }
+        r.root.append(dl);
+
+        // Sensores
+        const sensores = el("div", { class: "sensores" });
+        r.sensores = {};
+        for (const chave of ["fonte", "temperatura", "consumo", "usuario"]) {
+            const box = el("div", { class: "sensor" });
+            const label = el("div", { class: "sensor-label" });
+            const valor = el("div", { class: "sensor-valor" });
+            box.append(icone("info"), el("div", { class: "sensor-text" }, label, valor));
+            sensores.append(box);
+            r.sensores[chave] = { box, label, valor };
+        }
+        r.root.append(sensores);
+
+        r.ultima = el("div", { class: "vaga-sub", style: "margin-top: 12px" });
+        r.root.append(r.ultima);
+
+        return r;
+    }
+
+    function setSensor(s, nomeIcone, rotulo, valor, nivel) {
+        const atual = s.box.querySelector("svg");
+        if (atual.dataset.nome !== nomeIcone) {
+            const novo = icone(nomeIcone);
+            novo.dataset.nome = nomeIcone;
+            atual.replaceWith(novo);
+        }
+        s.label.textContent = rotulo;
+        s.valor.textContent = valor;
+        s.valor.title = valor;
+        if (nivel) s.box.dataset.nivel = nivel;
+        else delete s.box.dataset.nivel;
+    }
+
+    function atualizarCard(r, c) {
+        const p = estado.parametros;
+        const sit = situacaoVaga(c);
+
+        r.root.dataset.nivel = sit.nivel;
+        r.key.style.background = corSerie(c.numeroVaga);
+        r.nome.textContent = nomeVaga(c);
+        r.sub.textContent = `${modeloVaga(c)} · ID ${c.device}`;
+
+        r.pill.dataset.nivel = sit.nivel;
+        r.pill.replaceChildren(icone(sit.icone), document.createTextNode(sit.texto));
+
+        const causa = causaVaga(c);
+        if (causa) {
+            r.causa.hidden = false;
+            r.causa.dataset.nivel = causa.nivel;
+            r.causa.replaceChildren(
+                icone(causa.nivel === "critical" ? "stop" : "alert"),
+                el("span", { text: causa.texto })
+            );
+        } else {
+            r.causa.hidden = true;
+        }
+
+        // Potência
+        valorComUnidade(r.potValor, numeroBR(c.potenciaAtual), "kW");
+        const pct = p.potenciaNominalKW > 0 ? (c.potenciaAtual / p.potenciaNominalKW) * 100 : 0;
+        r.potCap.textContent = c.carregando === 1
+            ? `${numeroBR(pct, 0)}% da nominal (${numeroBR(p.potenciaNominalKW)} kW)`
+            : `nominal ${numeroBR(p.potenciaNominalKW)} kW`;
+        r.meter.dataset.nivel = c.status === "alerta" ? "warning" : "good";
+        r.meter.querySelector(".meter-fill").style.width = `${Math.min(100, pct)}%`;
+        r.meter.setAttribute("aria-valuenow", pct.toFixed(0));
+
+        // Sessão
+        r.sessao.energia.textContent = `${numeroBR(c.energiaSessao)} kWh`;
+        r.sessao.tempo.textContent = duracaoBR(c.tempoSessaoMinutos);
+        r.sessao.receita.textContent = moedaBR(c.receitaSessao);
+        r.sessao.custo.textContent = moedaBR(c.custoEnergiaSessao);
+        r.sessao.lucro.textContent = moedaBR(c.lucroSessao);
+        r.sessao.energiaTotal.textContent = `${numeroBR(c.energiaTotal)} kWh`;
+
+        // Sensores
+        const solar = c.origemEnergia === "solar";
+        setSensor(r.sensores.fonte,
+            solar ? "sun" : "plugGrid",
+            "Fonte de energia",
+            `${solar ? "Solar" : "Rede"} · ${moedaBR(c.custoEnergiaKWh)}/kWh`,
+            solar ? "solar" : null);
+
+        setSensor(r.sensores.temperatura,
+            "thermo",
+            "Temperatura",
+            `${c.temperatura} °C${c.sobrecargaTermica === 1 ? " · crítica" : ""}`,
+            c.sobrecargaTermica === 1 ? "critical" : null);
+
+        let consumoTexto = "normal";
+        let consumoNivel = null;
+        if (c.sobrecargaEletrica === 1) { consumoTexto = "sobrecarga"; consumoNivel = "critical"; }
+        else if (c.altaDemanda === 1) { consumoTexto = "alta demanda"; consumoNivel = "warning"; }
+        setSensor(r.sensores.consumo,
+            "light",
+            "Consumo da instalação (LDR)",
+            `${c.ldr} · ${consumoTexto}`,
+            consumoNivel);
+
+        setSensor(r.sensores.usuario,
+            "user",
+            "Usuário",
+            c.login === 1 ? "Autenticado" : "Não autenticado",
+            null);
+
+        r.ultima.textContent = `Última leitura do Tinkercad às ${c.ultimaAtualizacao ?? "--"}`;
+    }
+
+    function renderVagas(d) {
+        const container = document.getElementById("vagas");
+        const lista = vagasOrdenadas(d);
+
+        if (lista.length === 0) {
+            estado.cards.clear();
+            container.replaceChildren(
+                el("div", { class: "card vazio" },
+                    el("h3", { text: "Nenhum carregador conectado ainda" }),
+                    el("p", { class: "muted", text: "O backend está ativo e aguardando dados do Tinkercad." }),
+                    el("ol", {},
+                        el("li", { text: "Abra cada circuito do Tinkercad em uma aba e inicie a simulação." }),
+                        el("li", { text: "Abra o Monitor Serial de cada circuito." }),
+                        el("li", {}, "Confirme que a extensão envia para ", el("code", { text: "http://127.0.0.1:8080/arduinoserver" }), ".")
+                    )
+                )
+            );
+            setTexto("vagas-resumo", "Nenhuma vaga conectada");
+            return;
+        }
+
+        const presentes = new Set();
+        for (const c of lista) {
+            const id = String(c.device);
+            presentes.add(id);
+            let r = estado.cards.get(id);
+            if (!r) {
+                r = criarCard(c);
+                estado.cards.set(id, r);
+            }
+            atualizarCard(r, c);
+        }
+
+        for (const id of [...estado.cards.keys()]) {
+            if (!presentes.has(id)) estado.cards.delete(id);
+        }
+
+        const ordem = lista.map(c => estado.cards.get(String(c.device)).root);
+        const atuais = [...container.children];
+        if (ordem.length !== atuais.length || ordem.some((n, i) => n !== atuais[i])) {
+            container.replaceChildren(...ordem);
+        }
+
+        const carregando = lista.filter(c => c.carregando === 1).length;
+        const comAlerta = lista.filter(c => c.status === "erro" || c.status === "alerta").length;
+        let resumo = `${lista.length} ${lista.length === 1 ? "vaga" : "vagas"} · ${carregando} carregando`;
+        if (comAlerta) resumo += ` · ${comAlerta} com alerta`;
+        setTexto("vagas-resumo", resumo);
+    }
+
+    function vagasOrdenadas(d) {
+        const lista = Array.isArray(d?.carregadores) ? d.carregadores : [];
+        return [...lista].sort((a, b) => (a.numeroVaga ?? 0) - (b.numeroVaga ?? 0));
+    }
+
+
+    // ==========================================================
+    // FAIXA DE ALERTAS
+    // ==========================================================
+
+    function renderBanner(d) {
+        const banner = document.getElementById("banner");
+
+        if (estado.conexao === "offline") {
+            banner.dataset.nivel = "critical";
+            banner.replaceChildren(
+                icone("wifiOff"),
+                el("div", {},
+                    el("div", { class: "banner-title", text: "Sem conexão com o backend" }),
+                    el("div", {}, "Verifique se o servidor está em execução (", el("code", { text: "python app.py" }),
+                        ") e acesse o painel por ", el("code", { text: "http://localhost:8080" }),
+                        ". Os últimos dados recebidos continuam exibidos.")
+                )
+            );
+            banner.hidden = false;
+            return;
+        }
+
+        const lista = vagasOrdenadas(d);
+        const criticos = lista.filter(c => c.status === "erro");
+        const avisos = lista.filter(c => c.status === "alerta");
+
+        if (!criticos.length && !avisos.length) {
+            banner.hidden = true;
+            return;
+        }
+
+        const nivel = criticos.length ? "critical" : "warning";
+        const titulo = criticos.length
+            ? (criticos.length === 1 ? "1 carregador bloqueado por segurança" : `${criticos.length} carregadores bloqueados por segurança`)
+            : (avisos.length === 1 ? "1 carregador com potência reduzida" : `${avisos.length} carregadores com potência reduzida`);
+
+        const itens = el("ul");
+        for (const c of [...criticos, ...avisos]) {
+            const causa = causaVaga(c);
+            itens.append(el("li", {}, el("strong", { text: `${nomeVaga(c)}: ` }), causa ? causa.texto : ""));
+        }
+
+        banner.dataset.nivel = nivel;
+        banner.replaceChildren(
+            icone(nivel === "critical" ? "stop" : "alert"),
+            el("div", {}, el("div", { class: "banner-title", text: titulo }), itens)
+        );
+        banner.hidden = false;
+    }
+
+
+    // ==========================================================
+    // GRÁFICO DE POTÊNCIA (SVG)
+    // ==========================================================
+
+    const graficoWrap = document.getElementById("grafico-potencia");
+    const tooltip = document.getElementById("tooltip-potencia");
+
+    function registrarHistorico(d, t) {
+        estado.amostras.push(t);
+        while (estado.amostras.length && estado.amostras[0] < t - JANELA_MS - 5000) {
+            estado.amostras.shift();
+        }
+
+        for (const c of vagasOrdenadas(d)) {
+            const id = String(c.device);
+            if (!estado.historico.has(id)) estado.historico.set(id, []);
+            const pts = estado.historico.get(id);
+            pts.push({ t, v: Number(c.potenciaAtual) || 0 });
+            // Mantém um ponto anterior à janela para a linha começar na borda
+            while (pts.length > 2 && pts[1].t < t - JANELA_MS) pts.shift();
+        }
+    }
+
+    function valorNoInstante(pts, t) {
+        let valor = null;
+        for (const p of pts) {
+            if (p.t <= t) valor = p.v;
+            else break;
+        }
+        return valor;
+    }
+
+    function renderLegendaPotencia(lista) {
+        const legenda = document.getElementById("legenda-potencia");
+        legenda.replaceChildren(...lista.map(c =>
+            el("span", { class: "legend-item" },
+                el("span", { class: "line-key", style: `background: ${corSerie(c.numeroVaga)}` }),
+                nomeVaga(c)
+            )
+        ));
+    }
+
+    function renderGraficoPotencia() {
+        const d = estado.dados;
+        const lista = vagasOrdenadas(d);
+        const W = Math.max(280, graficoWrap.clientWidth);
+        const H = 260;
+        const m = { l: 34, r: 76, t: 12, b: 28 };
+        const pw = W - m.l - m.r;
+        const ph = H - m.t - m.b;
+        const agora = estado.amostras.length ? estado.amostras[estado.amostras.length - 1] : Date.now();
+        const inicio = agora - JANELA_MS;
+        const yMax = Math.max(2, Math.ceil(estado.parametros.potenciaNominalKW / 2) * 2);
+
+        const x = t => m.l + ((t - inicio) / JANELA_MS) * pw;
+        const y = v => m.t + (1 - v / yMax) * ph;
+
+        estado.geo = { m, pw, inicio, agora, x, y };
+
+        // O SVG é criado uma vez; a cada atualização só o conteúdo é redesenhado
+        const svg = graficoSvg;
+        svg.setAttribute("width", W);
+        svg.setAttribute("height", H);
+        svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+        svg.replaceChildren();
+
+        // Grade e eixo Y
+        for (let v = 0; v <= yMax; v += 2) {
+            svg.append(svgEl("line", { class: v === 0 ? "axis" : "grid", x1: m.l, x2: m.l + pw, y1: y(v), y2: y(v) }));
+            const tick = svgEl("text", { class: "tick", x: m.l - 8, y: y(v) + 4, "text-anchor": "end" });
+            tick.textContent = String(v);
+            svg.append(tick);
+        }
+
+        // Eixo X (tempo relativo)
+        for (const min of [3, 2, 1, 0]) {
+            const tx = x(agora - min * 60000);
+            const anchor = min === 3 ? "start" : (min === 0 ? "end" : "middle");
+            const tick = svgEl("text", { class: "tick", x: tx, y: H - 8, "text-anchor": anchor });
+            tick.textContent = min === 0 ? "agora" : `−${min} min`;
+            svg.append(tick);
+        }
+
+        // Séries (degraus: a potência muda em saltos)
+        const fins = [];
+        for (const c of lista) {
+            const pts = (estado.historico.get(String(c.device)) || []).filter(p => p.t <= agora);
+            if (!pts.length) continue;
+
+            let dPath = "";
+            pts.forEach((p, i) => {
+                const px = x(Math.max(p.t, inicio));
+                const py = y(p.v);
+                if (i === 0) dPath += `M${px.toFixed(1)},${py.toFixed(1)}`;
+                else dPath += `H${px.toFixed(1)}V${py.toFixed(1)}`;
+            });
+
+            const path = svgEl("path", { d: dPath, fill: "none", "stroke-width": "2", "stroke-linejoin": "round", "stroke-linecap": "round" });
+            path.style.stroke = corSerie(c.numeroVaga);
+            svg.append(path);
+
+            const ultimo = pts[pts.length - 1];
+            fins.push({ c, x: x(ultimo.t), y: y(ultimo.v), v: ultimo.v });
+        }
+
+        // Marcadores finais com anel na cor da superfície
+        for (const f of fins) {
+            const dot = svgEl("circle", { cx: f.x, cy: f.y, r: 4, "stroke-width": 2 });
+            dot.style.fill = corSerie(f.c.numeroVaga);
+            dot.style.stroke = "var(--surface)";
+            svg.append(dot);
+        }
+
+        // Rótulos finais apenas se não colidirem (senão: legenda + tooltip)
+        const ordenados = [...fins].sort((a, b) => a.y - b.y);
+        const colidem = ordenados.some((f, i) => i > 0 && f.y - ordenados[i - 1].y < 16);
+        if (!colidem) {
+            for (const f of fins) {
+                const label = svgEl("text", { class: "end-label", x: f.x + 9, y: f.y + 4 });
+                label.textContent = `${numeroBR(f.v)} kW`;
+                svg.append(label);
+            }
+        }
+
+        if (!fins.length) {
+            const msg = svgEl("text", { class: "aguardando", x: m.l + pw / 2, y: m.t + ph / 2, "text-anchor": "middle" });
+            msg.textContent = "Coletando dados…";
+            svg.append(msg);
+        }
+
+        // Crosshair
+        let tooltipDados = null;
+        if (estado.hoverFrac !== null && estado.amostras.length) {
+            const alvo = inicio + estado.hoverFrac * JANELA_MS;
+            let ts = null;
+            let melhor = Infinity;
+            for (const a of estado.amostras) {
+                if (a < inicio) continue;
+                const dist = Math.abs(a - alvo);
+                if (dist < melhor) { melhor = dist; ts = a; }
+            }
+
+            if (ts !== null) {
+                const cx = x(ts);
+                svg.append(svgEl("line", { class: "crosshair", x1: cx, x2: cx, y1: m.t, y2: m.t + ph }));
+
+                const linhas = [];
+                for (const c of lista) {
+                    const v = valorNoInstante(estado.historico.get(String(c.device)) || [], ts);
+                    if (v === null) continue;
+                    const dot = svgEl("circle", { cx, cy: y(v), r: 4, "stroke-width": 2 });
+                    dot.style.fill = corSerie(c.numeroVaga);
+                    dot.style.stroke = "var(--surface)";
+                    svg.append(dot);
+                    linhas.push({ c, v });
+                }
+                tooltipDados = { ts, cx, linhas };
+            }
+        }
+
+        renderTooltip(tooltipDados, W);
+    }
+
+    function renderTooltip(info, W) {
+        if (!info || !info.linhas.length) {
+            tooltip.hidden = true;
+            return;
+        }
+
+        tooltip.replaceChildren(
+            el("div", { class: "tooltip-time", text: horaBR(new Date(info.ts)) }),
+            ...info.linhas.map(({ c, v }) =>
+                el("div", { class: "tooltip-row" },
+                    el("span", { class: "line-key", style: `background: ${corSerie(c.numeroVaga)}` }),
+                    el("strong", { text: `${numeroBR(v)} kW` }),
+                    el("span", { class: "nome", text: nomeVaga(c) })
+                )
+            )
+        );
+        tooltip.hidden = false;
+
+        const largura = tooltip.offsetWidth;
+        let left = info.cx + 12;
+        if (left + largura > W) left = info.cx - largura - 12;
+        tooltip.style.left = `${Math.max(0, left)}px`;
+        tooltip.style.top = "8px";
+    }
+
+    const graficoSvg = svgEl("svg", {
+        class: "chart-svg", role: "img", tabindex: "0",
+        "aria-label": "Potência por vaga nos últimos 3 minutos. Use as setas para navegar pelos instantes."
+    });
+    graficoWrap.prepend(graficoSvg);
+    ligarEventosGrafico(graficoSvg);
+
+    function ligarEventosGrafico(svg) {
+        svg.addEventListener("pointermove", ev => {
+            const g = estado.geo;
+            if (!g) return;
+            const rect = svg.getBoundingClientRect();
+            const fx = (ev.clientX - rect.left - g.m.l) / g.pw;
+            estado.hoverFrac = Math.max(0, Math.min(1, fx));
+            renderGraficoPotencia();
+        });
+
+        svg.addEventListener("pointerleave", () => {
+            estado.hoverFrac = null;
+            renderGraficoPotencia();
+        });
+
+        svg.addEventListener("focus", () => {
+            if (estado.hoverFrac === null) {
+                estado.hoverFrac = 1;
+                renderGraficoPotencia();
+            }
+        });
+
+        svg.addEventListener("blur", () => {
+            estado.hoverFrac = null;
+            renderGraficoPotencia();
+        });
+
+        svg.addEventListener("keydown", ev => {
+            const passo = 5000 / JANELA_MS;
+            if (ev.key === "ArrowLeft" || ev.key === "ArrowRight") {
+                ev.preventDefault();
+                const atual = estado.hoverFrac ?? 1;
+                estado.hoverFrac = Math.max(0, Math.min(1, atual + (ev.key === "ArrowLeft" ? -passo : passo)));
+                renderGraficoPotencia();
+            } else if (ev.key === "Escape") {
+                estado.hoverFrac = null;
+                renderGraficoPotencia();
+            }
+        });
+    }
+
+    function renderTabelaPotencia(lista) {
+        const details = document.getElementById("tabela-potencia-details");
+        if (!details.open) return;
+
+        const ultimas = estado.amostras.slice(-10).reverse();
+        const thead = el("thead", {}, el("tr", {},
+            el("th", { text: "Horário" }),
+            ...lista.map(c => el("th", { text: `${nomeVaga(c)} (kW)` }))
+        ));
+        const tbody = el("tbody");
+        for (const ts of ultimas) {
+            tbody.append(el("tr", {},
+                el("td", { text: horaBR(new Date(ts)) }),
+                ...lista.map(c => {
+                    const v = valorNoInstante(estado.historico.get(String(c.device)) || [], ts);
+                    return el("td", { text: v === null ? "—" : numeroBR(v) });
+                })
+            ));
+        }
+        document.getElementById("tabela-potencia").replaceChildren(el("table", {}, thead, tbody));
+    }
+
+    document.getElementById("tabela-potencia-details").addEventListener("toggle", () => {
+        renderTabelaPotencia(vagasOrdenadas(estado.dados));
+    });
+
+    new ResizeObserver(() => renderGraficoPotencia()).observe(graficoWrap);
+
+
+    // ==========================================================
+    // ORIGEM DA ENERGIA
+    // ==========================================================
+
+    function renderOrigem(d) {
+        const total = Number(d.energiaTotal) || 0;
+        const solar = Math.min(total, Number(d.energiaSolarTotal) || 0);
+        const rede = Math.max(0, total - solar);
+        const pctSolar = total > 0 ? (solar / total) * 100 : 0;
+        const pctRede = total > 0 ? 100 - pctSolar : 0;
+
+        const barra = document.getElementById("origem-barra");
+        const segs = [];
+        if (solar > 0) segs.push({ cor: "var(--solar)", pct: pctSolar, nome: "Solar", kwh: solar });
+        if (rede > 0) segs.push({ cor: "var(--rede)", pct: pctRede, nome: "Rede elétrica", kwh: rede });
+
+        if (!segs.length) {
+            barra.replaceChildren(el("div", { class: "stack-vazio" }));
+        } else {
+            barra.replaceChildren(...segs.map(s => {
+                const seg = el("div", {
+                    class: `stack-seg${segs.length === 1 ? " unico" : ""}`,
+                    title: `${s.nome}: ${numeroBR(s.kwh)} kWh (${numeroBR(s.pct, 1)}%)`,
+                    style: `width: ${s.pct}%; background: ${s.cor}`
+                });
+                return seg;
+            }));
+        }
+        barra.setAttribute("aria-label",
+            `Origem da energia: solar ${numeroBR(pctSolar, 1)}%, rede ${numeroBR(pctRede, 1)}%`);
+
+        setTexto("origem-solar-kwh", `${numeroBR(solar)} kWh`);
+        setTexto("origem-solar-pct", `${numeroBR(pctSolar, 0)}%`);
+        setTexto("origem-rede-kwh", `${numeroBR(rede)} kWh`);
+        setTexto("origem-rede-pct", `${numeroBR(pctRede, 0)}%`);
+        setTexto("origem-economia", moedaBR(d.economiaSolar));
+    }
+
+
+    // ==========================================================
+    // REGISTRO DE EVENTOS
+    // ==========================================================
+
+    function registrarEvento(nivel, vaga, texto) {
+        estado.eventos.unshift({ t: new Date(), nivel, vaga, texto });
+        if (estado.eventos.length > MAX_EVENTOS) estado.eventos.length = MAX_EVENTOS;
+    }
+
+    function detectarEventos(d) {
+        for (const c of vagasOrdenadas(d)) {
+            const id = String(c.device);
+            const nome = nomeVaga(c);
+            const ant = estado.anteriores.get(id);
+
+            if (!ant) {
+                registrarEvento("info", nome, `Carregador identificado (${situacaoVaga(c).texto.toLowerCase()}).`);
+            } else {
+                if (ant.login !== c.login) {
+                    if (c.login === 1) {
+                        registrarEvento("info", nome, "Sessão de recarga iniciada.");
+                    } else {
+                        registrarEvento("info", nome,
+                            `Sessão encerrada: ${numeroBR(ant.energiaSessao)} kWh · ${moedaBR(ant.receitaSessao)}.`);
+                    }
+                }
+
+                if (ant.status !== c.status) {
+                    if (c.status === "erro") {
+                        registrarEvento("critical", nome, causaVaga(c).texto);
+                    } else if (c.status === "alerta") {
+                        registrarEvento("warning", nome, "Alta demanda sem energia solar: potência reduzida.");
+                    } else if (ant.status === "erro" || ant.status === "alerta") {
+                        registrarEvento("good", nome, "Condição normalizada, operação restabelecida.");
+                    }
+                }
+
+                if (ant.solar !== c.solar) {
+                    registrarEvento("info", nome, c.solar === 1
+                        ? "Energia solar disponível: custo da energia zerado."
+                        : "Energia solar indisponível: energia passa a vir da rede.");
+                }
+            }
+
+            estado.anteriores.set(id, {
+                login: c.login,
+                status: c.status,
+                solar: c.solar,
+                energiaSessao: c.energiaSessao,
+                receitaSessao: c.receitaSessao
+            });
+        }
+    }
+
+    function renderEventos() {
+        const lista = document.getElementById("eventos");
+
+        if (!estado.eventos.length) {
+            lista.replaceChildren(el("li", { class: "eventos-vazio", text: "Nenhum evento registrado ainda." }));
+            return;
+        }
+
+        const iconePorNivel = { good: "check", info: "info", warning: "alert", critical: "stop" };
+        const rotuloPorNivel = { good: "Normalizado", info: "Informação", warning: "Alerta", critical: "Crítico" };
+
+        lista.replaceChildren(...estado.eventos.map(e => {
+            const ic = icone(iconePorNivel[e.nivel]);
+            ic.setAttribute("aria-hidden", "false");
+            ic.setAttribute("role", "img");
+            ic.setAttribute("aria-label", rotuloPorNivel[e.nivel]);
+            return el("li", { class: "evento", "data-nivel": e.nivel },
+                el("time", { datetime: e.t.toISOString(), text: horaBR(e.t) }),
+                ic,
+                el("div", {},
+                    e.vaga ? el("span", { class: "evento-vaga", text: `${e.vaga} · ` }) : null,
+                    e.texto
+                )
+            );
+        }));
+    }
+
+    document.getElementById("btn-limpar").addEventListener("click", () => {
+        estado.eventos = [];
+        renderEventos();
+    });
+
+
+    // ==========================================================
+    // PARÂMETROS
+    // ==========================================================
+
+    function renderParametros(d) {
+        const p = estado.parametros;
+        const reduzida = p.potenciaNominalKW * p.fatorPotenciaSemSolar;
+        const itens = [
+            ["Potência nominal por vaga", `${numeroBR(p.potenciaNominalKW)} kW`],
+            ["Alta demanda sem solar", `${numeroBR(reduzida)} kW (${numeroBR(p.fatorPotenciaSemSolar * 100, 0)}%)`],
+            ["Tarifa cobrada do cliente", `${moedaBR(d?.tarifaKWh ?? 2)}/kWh`],
+            ["Custo da energia da rede", `${moedaBR(p.custoRedeKWh)}/kWh`],
+            ["Custo da energia solar", `${moedaBR(p.custoSolarKWh)}/kWh`],
+            ["Aceleração da simulação", `1 s real = ${numeroBR(p.fatorTempo / 60, 0)} min`],
+            ["Atualização do painel", `a cada ${numeroBR(INTERVALO_MS / 1000, 0)} s`]
+        ];
+        document.getElementById("parametros").replaceChildren(...itens.map(([k, v]) =>
+            el("div", {}, el("dt", { text: k }), el("dd", { class: "num", text: v }))
+        ));
+    }
+
+
+    // ==========================================================
+    // CONEXÃO E CICLO DE ATUALIZAÇÃO
+    // ==========================================================
+
+    function definirConexao(novo) {
+        const anterior = estado.conexao;
+        estado.conexao = novo;
+
+        const live = document.getElementById("live");
+        live.dataset.estado = novo;
+        setTexto("live-texto", novo === "online" ? "Ao vivo" : (novo === "offline" ? "Sem conexão" : "Conectando…"));
+
+        document.getElementById("app").classList.toggle("stale", novo === "offline");
+
+        if (anterior === "online" && novo === "offline") {
+            registrarEvento("critical", null, "Conexão com o backend perdida.");
+        } else if (anterior === "offline" && novo === "online") {
+            registrarEvento("good", null, "Conexão com o backend restabelecida.");
+        }
+    }
+
+    function renderTudo() {
+        const d = estado.dados;
+        if (d) {
+            renderKPIs(d);
+            renderVagas(d);
+            renderOrigem(d);
+            renderParametros(d);
+            const lista = vagasOrdenadas(d);
+            renderLegendaPotencia(lista);
+            renderTabelaPotencia(lista);
+        } else {
+            renderParametros(null);
+        }
+        renderBanner(d);
+        renderGraficoPotencia();
+        renderEventos();
+    }
+
+    async function atualizar() {
+        try {
+            const resposta = await fetch(API_URL, { cache: "no-store" });
+            if (!resposta.ok) throw new Error(`HTTP ${resposta.status}`);
+            const d = await resposta.json();
+
+            const agora = Date.now();
+            estado.dados = d;
+            estado.parametros = { ...PARAMETROS_PADRAO, ...(d.parametros || {}) };
+
+            definirConexao("online");
+            detectarEventos(d);
+            registrarHistorico(d, agora);
+
+            setTexto("atualizado", `Atualizado às ${horaBR(new Date(agora))}`);
+        } catch (erro) {
+            console.error("Erro ao conectar com o backend:", erro);
+            definirConexao("offline");
+        }
+
+        renderTudo();
+        setTimeout(atualizar, INTERVALO_MS);
+    }
+
+    renderTudo();
+    atualizar();
+
+</script>
+
+</body>
+</html>
