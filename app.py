@@ -73,6 +73,10 @@ def criar_carregador(device):
 
         "sobrecargaTermica": 0,
 
+        "carro": 0,
+
+        "emergencia": 0,
+
         "status": "aguardando",
 
         "ultimaAtualizacao": None,
@@ -141,6 +145,18 @@ def obter_carregador(device):
 # CALCULA O STATUS DE UM CARREGADOR
 def calcular_status(carregador):
 
+    # Botão de emergência acionado: tem prioridade sobre tudo
+    if carregador["emergencia"] == 1:
+
+        return "emergencia"
+
+
+    # Sem login (usuário não autenticado): carregador offline
+    if carregador["login"] == 0:
+
+        return "offline"
+
+
     # Sobrecarga elétrica ou térmica
     if (
         carregador["sobrecargaEletrica"] == 1
@@ -160,18 +176,24 @@ def calcular_status(carregador):
         return "alerta"
 
 
-    # Login ativo e nenhuma condição de bloqueio
-    if carregador["login"] == 1:
+    # Veículo conectado e nenhuma condição de bloqueio:
+    # a recarga está em andamento
+    if carregador["carro"] == 1:
 
         return "operacional"
 
 
+    # Online e sem veículo: recarga disponível
     return "livre"
 
 # ATUALIZA O ESTADO DE RECARGA
 def atualizar_estado_recarga(carregador):
 
-    if carregador["login"] == 1:
+    # A sessão existe quando o usuário está logado e o veículo conectado
+    if (
+        carregador["login"] == 1
+        and carregador["carro"] == 1
+    ):
 
         carregador["sessoesAtivas"] = 1
 
@@ -214,6 +236,7 @@ def atualizar_estado_recarga(carregador):
     # Alta demanda sem energia solar: potência reduzida
     elif (
         carregador["login"] == 1
+        and carregador["carro"] == 1
         and carregador["status"] == "alerta"
     ):
 
@@ -652,6 +675,10 @@ def montar_resposta_api():
 
             "sobrecargaTermica",
 
+            "carro",
+
+            "emergencia",
+
             "status",
 
             "ultimaAtualizacao",
@@ -698,6 +725,10 @@ def montar_resposta_api():
             "sobrecargaEletrica": 0,
 
             "sobrecargaTermica": 0,
+
+            "carro": 0,
+
+            "emergencia": 0,
 
             "status": "aguardando",
 
@@ -769,8 +800,9 @@ def receber_arduino():
                 carregador
             )
 
-            login_anterior = (
-                carregador["login"]
+            sessao_anterior = (
+                carregador["login"] == 1
+                and carregador["carro"] == 1
             )
 
             dados_recebidos = json.loads(
@@ -839,6 +871,22 @@ def receber_arduino():
                 )
             )
 
+            # Versão antiga do circuito não envia carro: considera conectado
+            carregador["carro"] = int(
+                dados_recebidos.get(
+                    "carro",
+                    1
+                )
+            )
+
+
+            carregador["emergencia"] = int(
+                dados_recebidos.get(
+                    "emergencia",
+                    0
+                )
+            )
+
             # STATUS
             carregador["status"] = (
                 calcular_status(
@@ -846,9 +894,16 @@ def receber_arduino():
                 )
             )
 
+            # Nova sessão: o usuário está logado e o veículo acabou
+            # de ser conectado (ou o login foi feito com ele já conectado)
+            sessao_atual = (
+                carregador["login"] == 1
+                and carregador["carro"] == 1
+            )
+
             if (
-                login_anterior == 0
-                and carregador["login"] == 1
+                not sessao_anterior
+                and sessao_atual
             ):
 
                 carregador[
