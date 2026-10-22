@@ -21,8 +21,9 @@ function procurarDadosSerial() {
 
     const textoPagina = document.body.innerText;
 
-    // Formato enviado pelo nosso Arduino
-    const regex = /\{"login":\d+,"solar":\d+,"ldr":\d+,"temperatura":-?\d+,"altaDemanda":\d+,"sobrecargaEletrica":\d+,"sobrecargaTermica":\d+\}/g;
+    // Formato enviado pelo nosso Arduino (os campos carro e emergencia
+    // são opcionais, para aceitar também a versão antiga do circuito)
+    const regex = /\{"login":\d+,"solar":\d+,"ldr":\d+,"temperatura":-?\d+,"altaDemanda":\d+,"sobrecargaEletrica":\d+,"sobrecargaTermica":\d+(?:,"carro":\d+)?(?:,"emergencia":\d+)?\}/g;
 
     const resultados = textoPagina.match(regex);
 
